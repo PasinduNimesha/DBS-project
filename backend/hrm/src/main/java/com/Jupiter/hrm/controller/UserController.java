@@ -1,0 +1,80 @@
+package com.Jupiter.hrm.controller;
+import com.Jupiter.hrm.entity.User;
+import com.Jupiter.hrm.dto.UserDto;
+import com.Jupiter.hrm.service.UserService;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.lang.reflect.Type;
+import java.util.List;
+
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody UserDto userDto) {
+        UserDto createdUser = modelMapper.map(userService.createUser(modelMapper.map(userDto, User.class)), UserDto.class);;
+        return new ResponseEntity<>(modelMapper.map(createdUser, User.class), HttpStatus.CREATED);
+    }
+
+
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        Type listType = new TypeToken<List<UserDto>>() {}.getType();
+        List<UserDto> users = modelMapper.map(userService.getAllUsers(), listType);
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        UserDto user = modelMapper.map(userService.getUserById(id), UserDto.class);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserDto updatedUser) {
+        UserDto user = modelMapper.map(userService.updateUser(id, modelMapper.map(updatedUser, User.class)), UserDto.class);
+        return new ResponseEntity<>(user.getUsername(), HttpStatus.OK);
+
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        boolean deleted = userService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody UserDto userDto) {
+        // Check if the provided username and password match a user in your database
+        User user = userService.findByUsernameAndPassword(userDto.getUsername(), userDto.getPassword());
+
+        if (user != null) {
+            // User is authenticated, you can return user information or a token here
+            // For simplicity, we'll return the user object, but consider using JWT or OAuth2 for real-world applications
+            return ResponseEntity.ok(user);
+        } else {
+            // Authentication failed, return an error response
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
+        }
+    }
+
+}
+
