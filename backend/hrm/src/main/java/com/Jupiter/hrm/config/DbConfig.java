@@ -9,6 +9,7 @@ public class DbConfig {
         Connection con = null;
 
         try {
+            // change the password
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jupiter", "root", "password");
             System.out.println("Connection success");
         } catch (SQLException e) {
