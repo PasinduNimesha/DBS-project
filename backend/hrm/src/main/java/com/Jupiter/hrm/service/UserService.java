@@ -1,13 +1,29 @@
 package com.Jupiter.hrm.service;
 import com.Jupiter.hrm.entity.User;
+import com.Jupiter.hrm.repository.UserRepo;
 import com.Jupiter.hrm.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 @Service
 public class UserService {
+
+
+    public static Connection getConnection() throws SQLException {
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jupiter", "root", "30104771");
+            System.out.println("Connection success");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
+        }
+        return con;
+    }
     private final UserRepository userRepository;
 
     @Autowired
@@ -16,30 +32,38 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public User createUser(User user){return userRepository.save(user);}
+    @Autowired
+    private UserRepo userRepo;
 
-    public List<User> getAllUsers(){return  userRepository.findAll();}
+    public void createUser(User user){
+        userRepo.save(user);
+    }
+
+    public List<User> getAllUsers(){return  userRepo.findAllUsers();}
 
     public User getUserById(Long id){
-        Optional<User> optionalUser = userRepository.findById(id);
+        Optional<User> optionalUser = userRepo.findById(id);
         return optionalUser.orElse(null);
     }
 
-    public User updateUser(Long id, User updatedUser) {
-        Optional<User> optionalUser = userRepository.findById(id);
+    public boolean updateUser(Long id, User updatedUser) {
+        Optional<User> optionalUser = userRepo.findById(id);
+        updatedUser.setUser_id(id);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            user.setUsername(updatedUser.getUsername());
-            return userRepository.save(user);
-        } else {
-            return null;
+            System.out.println(updatedUser.getUser_id()+user.getUsername()+updatedUser.getPassword());
+            userRepo.update(updatedUser);
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
     public boolean deleteUser(Long id){
-        Optional<User> optionalUser = userRepository.findById(id);
+        Optional<User> optionalUser = userRepo.findById(id);
         if(optionalUser.isPresent()){
-            userRepository.delete(optionalUser.get());
+            userRepo.delete(optionalUser.get());
             return true;
         }
         else{
@@ -48,7 +72,7 @@ public class UserService {
     }
 
     public User findByUsernameAndPassword(String username, String password) {
-        User user = userRepository.findByUsernameAndPassword(username, password);
+        User user = userRepo.findByUsernameAndPassword(username, password);
         if(user == null){
             return null;
         }

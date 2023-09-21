@@ -1,4 +1,5 @@
 package com.Jupiter.hrm.config;
+import com.Jupiter.hrm.repository.UserRepo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.modelmapper.ModelMapper;
@@ -10,4 +11,8 @@ public class Config {
     public ModelMapper modelMapper() {
         return new ModelMapper();
     }
+
+    @Bean
+    public UserRepo userRepo(){return new UserRepo();}
+
 }

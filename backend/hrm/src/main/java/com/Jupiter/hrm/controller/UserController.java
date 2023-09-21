@@ -27,9 +27,9 @@ public class UserController {
 
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody UserDto userDto) {
-        UserDto createdUser = modelMapper.map(userService.createUser(modelMapper.map(userDto, User.class)), UserDto.class);;
-        return new ResponseEntity<>(modelMapper.map(createdUser, User.class), HttpStatus.CREATED);
+    public HttpStatus createUser(@RequestBody UserDto userDto) {
+        userService.createUser(modelMapper.map(userDto, User.class));
+        return HttpStatus.CREATED;
     }
 
 
@@ -50,16 +50,27 @@ public class UserController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserDto updatedUser) {
-        UserDto user = modelMapper.map(userService.updateUser(id, modelMapper.map(updatedUser, User.class)), UserDto.class);
-        return new ResponseEntity<>(user.getUsername(), HttpStatus.OK);
+    public HttpStatus updateUser(@PathVariable Long id, @RequestBody UserDto updatedUser) {
+        if(userService.updateUser(id, modelMapper.map(updatedUser, User.class))){
+            return HttpStatus.OK;
+        }
+        else{
+            return HttpStatus.NOT_FOUND;
+        }
+
 
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         boolean deleted = userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        if(deleted){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
     }
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserDto userDto) {
