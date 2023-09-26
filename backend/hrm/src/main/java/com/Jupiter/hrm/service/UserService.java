@@ -5,6 +5,7 @@ import com.Jupiter.hrm.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.Jupiter.hrm.repository.LeaveTypeRepository;
 
 import java.sql.*;
 import java.util.List;
@@ -13,17 +14,17 @@ import java.util.Optional;
 public class UserService {
 
 
-    public static Connection getConnection() throws SQLException {
-        Connection con = null;
-        try {
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jupiter", "root", "30104771");
-            System.out.println("Connection success");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw e;
-        }
-        return con;
-    }
+//    public static Connection getConnection() throws SQLException {
+//        Connection con = null;
+//        try {
+//            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jupiter", "root", "30104771");
+//            System.out.println("Connection success");
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//            throw e;
+//        }
+//        return con;
+//    }
     private final UserRepository userRepository;
 
     @Autowired
@@ -35,11 +36,16 @@ public class UserService {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private LeaveTypeRepository leaveTypeRepository;
+
     public void createUser(User user){
         userRepo.save(user);
     }
 
-    public List<User> getAllUsers(){return  userRepo.findAllUsers();}
+    public List<User> getAllUsers(){
+        return  userRepo.findAllUsers();
+    }
 
     public User getUserById(Long id){
         Optional<User> optionalUser = userRepo.findById(id);

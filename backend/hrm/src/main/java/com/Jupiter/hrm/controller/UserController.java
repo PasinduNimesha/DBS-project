@@ -74,15 +74,11 @@ public class UserController {
     }
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserDto userDto) {
-        // Check if the provided username and password match a user in your database
         User user = userService.findByUsernameAndPassword(userDto.getUsername(), userDto.getPassword());
 
         if (user != null) {
-            // User is authenticated, you can return user information or a token here
-            // For simplicity, we'll return the user object, but consider using JWT or OAuth2 for real-world applications
             return ResponseEntity.ok(user);
         } else {
-            // Authentication failed, return an error response
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
         }
     }
