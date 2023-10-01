@@ -8,7 +8,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 
 public class EmployeeExtensionRepo {
@@ -60,12 +62,14 @@ public class EmployeeExtensionRepo {
             columns.add(entry.getKey());
             placeholders.add("?");
         }
-
-        return "INSERT INTO employee_extension (" + columns.toString() + ") VALUES (" + placeholders.toString() + ")";
+        placeholders.add("?");
+        String query = "INSERT INTO employee_extension (" +"employee_id, " + columns.toString() + ") VALUES (" + placeholders.toString() + ")";
+        return query;
     }
-    private PreparedStatement setValues(Map<String, Integer> int_attributes, Map<String, String> str_attributes, Map<String, Double> double_attributes, PreparedStatement preparedStatement){
+    private PreparedStatement setValues(Map<String, Integer> int_attributes, Map<String, String> str_attributes, Map<String, Double> double_attributes, Long id, PreparedStatement preparedStatement){
         try{
-            int i = 1;
+            preparedStatement.setLong(1, id);
+            int i = 2;
             for (Map.Entry<String, Integer> entry : int_attributes.entrySet()) {
                 Integer key = entry.getValue();
                 preparedStatement.setInt(i, key);
@@ -89,13 +93,16 @@ public class EmployeeExtensionRepo {
 
     }
 
-    public void save(Map<String, Integer> int_attributes, Map<String, String> str_attributes, Map<String, Double> double_attributes){
+    public void save(Map<String, Integer> int_attributes, Map<String, String> str_attributes, Map<String, Double> double_attributes, Long id){
         try{
-            String sqlQuery = createSaveQuery(int_attributes, str_attributes, double_attributes);
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-            preparedStatement = setValues(int_attributes, str_attributes, double_attributes, preparedStatement);
-            System.out.println(sqlQuery);
-            preparedStatement.executeUpdate();
+            if(validateAttributes(int_attributes, str_attributes, double_attributes)){
+                String sqlQuery = createSaveQuery(int_attributes, str_attributes, double_attributes);
+                PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+                preparedStatement = setValues(int_attributes, str_attributes, double_attributes, id, preparedStatement);
+                System.out.println(sqlQuery);
+                preparedStatement.executeUpdate();
+            }
+
             PreparedStatement ps = connection.prepareStatement("SELECT column_name FROM information_schema.columns WHERE table_name = 'employee_extension'");
             ResultSet resultSet = ps.executeQuery();
 
@@ -109,4 +116,50 @@ public class EmployeeExtensionRepo {
         }
 
     }
+    private boolean validateAttributes(Map<String, Integer> int_attributes, Map<String, String> str_attributes, Map<String, Double> double_attributes) {
+        try {
+            Set<String> columnNames = new HashSet<>();
+            columnNames = getAttributes();
+
+
+            for (Map.Entry<String, Integer> entry : int_attributes.entrySet()) {
+                if (!columnNames.contains(entry.getKey())) {
+                    return false;
+                }
+            }
+
+            for (Map.Entry<String, String> entry : str_attributes.entrySet()) {
+                if (!columnNames.contains(entry.getKey())) {
+                    return false;
+                }
+            }
+
+            for (Map.Entry<String, Double> entry : double_attributes.entrySet()) {
+                if (!columnNames.contains(entry.getKey())) {
+                    return false;
+                }
+            }
+
+            return true; // All attribute keys are present in column names
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Set<String> getAttributes() throws SQLException{
+        PreparedStatement ps = null;
+        Set<String> columnNames = new HashSet<>();
+        try {
+            ps = connection.prepareStatement("SELECT column_name FROM information_schema.columns WHERE table_name = 'employee_extension'");
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()) {
+                columnNames.add(resultSet.getString("column_name"));
+            }
+            return columnNames;
+        } catch (SQLException e) {
+            throw new SQLException();
+        }
+
+    }
+
 }

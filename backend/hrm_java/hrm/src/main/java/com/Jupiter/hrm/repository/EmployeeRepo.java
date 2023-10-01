@@ -3,10 +3,7 @@ package com.Jupiter.hrm.repository;
 import com.Jupiter.hrm.entity.Employee;
 import com.Jupiter.hrm.config.DbConfig;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,16 +17,30 @@ public class EmployeeRepo {
             throw new RuntimeException(e);
         }
     }
-    public void save(Employee employee){
+    public Long save(Employee employee){
         try{
             String sqlQuery = "INSERT INTO employee (name, birthdate, marital_status, emergency_contact, organization_id) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, employee.getName());
             preparedStatement.setString(2, employee.getBirthdate());
             preparedStatement.setBoolean(3, employee.isMarital_status());
             preparedStatement.setString(4, employee.getEmergency_contact());
             preparedStatement.setString(5, employee.getOrganization_id());
-            preparedStatement.executeUpdate();
+            int rowsInserted = preparedStatement.executeUpdate();
+
+
+            if (rowsInserted > 0) {
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    long lastInsertID = generatedKeys.getLong(1);
+                    System.out.println("Last Inserted ID: " + lastInsertID);
+                    return lastInsertID;
+                } else {
+                    System.out.println("Failed to retrieve last inserted ID.");
+                }
+            }
+            return null;
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -80,6 +91,7 @@ public class EmployeeRepo {
         try {
             String sqlQuery = "SELECT * FROM employee WHERE employee_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+            System.out.println(employeeID);
             preparedStatement.setLong(1, employeeID);
             ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -108,7 +120,11 @@ public class EmployeeRepo {
     private Employee getEmployee(Employee employee, ResultSet resultSet){
         try {
             employee.setEmployee_id(resultSet.getInt("employee_id"));
-            employee.setName(resultSet.getString("employeename"));
+            employee.setName(resultSet.getString("name"));
+            employee.setBirthdate(resultSet.getString("birthdate"));
+            employee.setEmergency_contact(resultSet.getString("emergency_contact"));
+            employee.setMarital_status(resultSet.getBoolean("marital_status"));
+            employee.setOrganization_id(resultSet.getString("organization_id"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

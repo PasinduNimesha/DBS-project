@@ -1,11 +1,11 @@
 package com.Jupiter.hrm.config;
-import com.Jupiter.hrm.repository.EmployeeExtensionRepo;
-import com.Jupiter.hrm.repository.EmployeeRepo;
-import com.Jupiter.hrm.repository.LeaveTypeRepository;
-import com.Jupiter.hrm.repository.UserRepo;
+import com.Jupiter.hrm.entity.LeaveApplication;
+import com.Jupiter.hrm.repository.*;
+import com.Jupiter.hrm.security.PasswordHasher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 public class Config {
@@ -27,4 +27,15 @@ public class Config {
     @Bean
     public LeaveTypeRepository leaveTypeRepository(){ return new LeaveTypeRepository();}
 
+    @Bean
+    public EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository(){return new EmployeeLeaveBalanceRepository();}
+
+    @Bean
+    public LeaveApplicationRepo leaveApplicationRepo(){return new LeaveApplicationRepo();}
+
+    @Bean
+    public PasswordHasher passwordHasher(){return new PasswordHasher();}
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder(){return new BCryptPasswordEncoder();}
 }

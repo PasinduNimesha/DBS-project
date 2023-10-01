@@ -2,11 +2,13 @@ package com.Jupiter.hrm.service;
 import com.Jupiter.hrm.entity.User;
 import com.Jupiter.hrm.repository.UserRepo;
 import com.Jupiter.hrm.repository.UserRepository;
-import com.Jupiter.hrm.security.PasswordHasher;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.Jupiter.hrm.repository.LeaveTypeRepository;
+import com.Jupiter.hrm.security.PasswordHasher;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 import java.sql.*;
 import java.util.List;
@@ -14,33 +16,21 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-
-//    public static Connection getConnection() throws SQLException {
-//        Connection con = null;
-//        try {
-//            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jupiter", "root", "30104771");
-//            System.out.println("Connection success");
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            throw e;
-//        }
-//        return con;
-//    }
     private final UserRepository userRepository;
-
-    @Autowired
-    UserService(UserRepository userRepository){this.userRepository = userRepository;}
-
-    @Autowired
     private ModelMapper modelMapper;
-
-    @Autowired
     private UserRepo userRepo;
+    private BCryptPasswordEncoder encoder;
 
     @Autowired
-    private LeaveTypeRepository leaveTypeRepository;
+    UserService(UserRepository userRepository, ModelMapper modelMapper, UserRepo userRepo, BCryptPasswordEncoder encoder){
+        this.userRepository = userRepository;
+        this.userRepo = userRepo;
+        this.encoder = encoder;
+        this.modelMapper = modelMapper;
+    }
 
     public void createUser(User user){
+        user.setPassword(encoder.encode(user.getPassword()));
         userRepo.save(user);
     }
 
@@ -86,15 +76,11 @@ public class UserService {
             return null;
         }
 
-        // Retrieve the user's stored salt from the database
-        String storedSalt = user.getSalt();
 
         // Verify the entered password using PasswordHasher.verifyPassword
-        if (PasswordHasher.verifyPassword(password, storedSalt, user.getPassword())) {
-            // Passwords match; authentication successful
+        if (encoder.matches(password, user.getPassword())) {
             return user;
         } else {
-            // Passwords do not match; authentication failed
             return null;
         }
     }

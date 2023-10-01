@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @RestController
@@ -21,47 +22,47 @@ import java.util.Map;
 public class EmployeeController {
     private final EmployeeService employeeService;
     private final EmployeeExtensionService employeeExtensionService;
-
-    @Autowired
-    public EmployeeController(EmployeeService employeeService, EmployeeExtensionService employeeExtensionService) {
-        this.employeeService = employeeService;
-        this.employeeExtensionService = employeeExtensionService;
-    }
-
-
-    @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    public EmployeeController(EmployeeService employeeService, EmployeeExtensionService employeeExtensionService, ModelMapper modelMapper) {
+        this.employeeService = employeeService;
+        this.employeeExtensionService = employeeExtensionService;
+        this.modelMapper = modelMapper;
+    }
 
     @PostMapping
     public HttpStatus createEmployee(@RequestBody EmployeeDto employeeDto) {
         int employee_id = employeeDto.getEmployee_id();
-        employeeService.createEmployee(modelMapper.map(employeeDto, Employee.class));
-        employeeExtensionService.createEmployeeExtension(employeeDto.getInt_attributes(), employeeDto.getStr_attributes(), employeeDto.getDouble_attributes());
-        if(employeeDto.getInt_attributes() != null){
-            for (Map.Entry<String, Integer> entry : employeeDto.getInt_attributes().entrySet()) {
-                String key = entry.getKey();
-                Integer value = entry.getValue();
-                System.out.println("Key: " + key + ", Value: " + value);
-            }
-
-        }
-        if(employeeDto.getStr_attributes() != null){
-            for (Map.Entry<String, String> entry : employeeDto.getStr_attributes().entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                System.out.println("Key: " + key + ", Value: " + value);
-            }
-
-        }
-        if(employeeDto.getDouble_attributes() != null){
-            for (Map.Entry<String, Double> entry : employeeDto.getDouble_attributes().entrySet()) {
-                String key = entry.getKey();
-                Double value = entry.getValue();
-                System.out.println("Key: " + key + ", Value: " + value);
-            }
-
-        }
+        System.out.println(employeeDto.getEmployee_id());
+        System.out.println(employeeDto.getName());
+        System.out.println(employeeDto.getEmergency_contact());
+        Long id = employeeService.createEmployee(modelMapper.map(employeeDto, Employee.class));
+        employeeExtensionService.createEmployeeExtension(employeeDto.getInt_attributes(), employeeDto.getStr_attributes(), employeeDto.getDouble_attributes(), id);
+//        if(employeeDto.getInt_attributes() != null){
+//            for (Map.Entry<String, Integer> entry : employeeDto.getInt_attributes().entrySet()) {
+//                String key = entry.getKey();
+//                Integer value = entry.getValue();
+//                System.out.println("Key: " + key + ", Value: " + value);
+//            }
+//
+//        }
+//        if(employeeDto.getStr_attributes() != null){
+//            for (Map.Entry<String, String> entry : employeeDto.getStr_attributes().entrySet()) {
+//                String key = entry.getKey();
+//                String value = entry.getValue();
+//                System.out.println("Key: " + key + ", Value: " + value);
+//            }
+//
+//        }
+//        if(employeeDto.getDouble_attributes() != null){
+//            for (Map.Entry<String, Double> entry : employeeDto.getDouble_attributes().entrySet()) {
+//                String key = entry.getKey();
+//                Double value = entry.getValue();
+//                System.out.println("Key: " + key + ", Value: " + value);
+//            }
+//
+//        }
         return HttpStatus.CREATED;
     }
 
@@ -108,6 +109,14 @@ public class EmployeeController {
     public ResponseEntity<?> loginEmployee(@RequestBody EmployeeDto employeeDto) {
         return null;
     }
+
+    @GetMapping("/attributes")
+    public ResponseEntity<Set<String>> getAttributes(){
+        Set<String> attributes = employeeExtensionService.getAttributes();
+        return new ResponseEntity<>(attributes, HttpStatus.OK);
+    }
+
+
 
 }
 
